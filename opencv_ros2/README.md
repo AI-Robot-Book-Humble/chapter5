@@ -3,7 +3,7 @@
 ## 概要
 
 - OpenCVとROS2によるロボットビジョンのアプリケーション
-- Ubuntu 20.04, ROS Foxyで作成・確認
+- Ubuntu 22.04, ROS Humbleで作成・確認
 
 ## インストール
 
