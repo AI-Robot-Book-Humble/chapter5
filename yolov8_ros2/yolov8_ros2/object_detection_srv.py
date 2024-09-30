@@ -1,3 +1,4 @@
+import sys
 import time
 import threading
 import queue
@@ -17,18 +18,20 @@ from rclpy.executors import MultiThreadedExecutor
 
 from ultralytics import YOLO
 
+#from yolov5_ros2.detector import Detector, parse_opt
 from airobot_interfaces.srv import StringCommand
 
 
-class ObjectDetectionSRV(Node):
+class ObjectDetectionSRV2(Node):
 
     def __init__(self, **args):
-        super().__init__('object_detection_srv')
+        super().__init__('object_detection_srv2')
 
         self.running = False  # 物体認識の処理のフラグ
         self.target_name = 'cup'  # 探す物体名
         self.counter = 0  # 物体の検出回数を数えるカウンタ
         self.frame_id = 'target'  # ブロードキャストするtfの名前
+        #self.detector = Detector(**args)  # yolov5を使って物体検出を行うクラス
         self.detection_model = YOLO("yolov8m.pt")
         self.bridge = CvBridge()  # ROSのメッセージとOpenCVのデータ変換
         self.q_color = queue.Queue()  # メインスレッドへカラー画像を送るキュー
@@ -65,18 +68,19 @@ class ObjectDetectionSRV(Node):
             name = request.command[4:].strip()
             if len(name) == 0:
                 response.answer = 'NG name required'
-            elif name not in self.detection_model.names:
-                response.answer = 'NG unknown name'
+            #elif name not in self.detection_model.names:
+            #    response.answer = 'NG unknown name'
             else:
                 with self.lock:  # 物体認識を開始させる
                     self.target_name = name
                     self.running = True
                     self.counter = 0
-                time.sleep(3)   # しばらく停止
+                time.sleep(10)   # しばらく停止
                 with self.lock:  # 物体認識の結果を得る
                     self.running = False
                     counter = self.counter
-                if counter >= 10:  # 十分な回数で認識されているか？
+                    print(counter)
+                if counter >= 1:  # 十分な回数で認識されているか？
                     response.answer = 'OK'
                 else:
                     response.answer = 'NG not found'
@@ -84,8 +88,8 @@ class ObjectDetectionSRV(Node):
             name = request.command[5:].strip()
             if len(name) == 0:
                 response.answer = 'NG name required'
-            elif name not in self.detection_model.names:
-                response.answer = 'NG unknown name'
+            #elif name not in self.detection_model.names:
+            #    response.answer = 'NG unknown name'
             else:
                 with self.lock:  # 物体認識を開始させる
                     self.target_name = name
@@ -122,8 +126,9 @@ class ObjectDetectionSRV(Node):
         # 物体認識
         detection_result = []
         if running:
+            #img_color, result = self.detector.detect(img_color)
             detection_result = self.detection_model(img_color)
-            annotated_frame = detection_result[0].plot()
+            img_color = detection_result[0].plot()
 
             for r in detection_result:
                 boxes = r.boxes
@@ -136,7 +141,7 @@ class ObjectDetectionSRV(Node):
                     r.u2 = int(b[2])
                     r.v2 = int(b[3])
 
-            self.q_color.put(annotated_frame)  # メインスレッドへカラー画像を送る．
+        self.q_color.put(img_color)  # メインスレッドへカラー画像を送る．
 
         # 物体に認識の結果に指定された名前があるか調べる．
         target = None
@@ -188,12 +193,14 @@ class ObjectDetectionSRV(Node):
 
 def main():
     rclpy.init()
-    node = ObjectDetectionSRV()
+    #opt = parse_opt(remove_ros_args(args=sys.argv))
+    #node = ObjectDetectionSRV2(**vars(opt))
+    node = ObjectDetectionSRV2()
 
     # 別のスレッドでrclpy.spin()を実行する
     executor = MultiThreadedExecutor()
     thread = threading.Thread(
-        target=rclpy.spin, args=(ObjectDetectionSRV(), executor), daemon=True)
+        target=rclpy.spin, args=(node, executor), daemon=True)
     thread.start()
 
     try:
