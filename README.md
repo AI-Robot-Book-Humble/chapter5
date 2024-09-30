@@ -10,7 +10,7 @@ ROS2とPythonで作って学ぶAIロボット入門（出村・萩原・升谷�
 
 - [opencv_ros2](opencv_ros2)： OpenCVとROS2のサンプルプログラム
 
-- [yolov5_ros2](yolov5_ros2)： YOLOv5とROS2のサンプルプログラム
+- [yolov8_ros2](yolov8_ros2)： YOLOv8とROS2のサンプルプログラム
 
 ## 補足情報
 
