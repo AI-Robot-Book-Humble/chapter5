@@ -9,12 +9,13 @@
 
 - [opencv_ros2](../opencv_ros2/README.md)のインストール作業
 
-- YOLOv5ソフトウェアをインストール
+- YOLOv8ソフトウェアをインストール
   ```
-  cd ˜/airobot_ws/
-  git clone -b v6.2 https://github.com/ultralytics/yolov5
-  cd yolov5
-  pip3 install -r requirements.txt
+  git clone https://github.com/ultralytics/ultralytics
+  
+  cd ultralytics
+  
+  pip install -e .
   ```
 
 ## 実行
