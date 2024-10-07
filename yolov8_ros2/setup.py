@@ -25,6 +25,8 @@ setup(
             'object_distance = yolov8_ros2.object_distance:main',
             'object_detection_tf = yolov8_ros2.object_detection_tf:main',
             'object_detection_srv = yolov8_ros2.object_detection_srv:main',
+            'object_detection_action_server = yolov8_ros2.object_detection_action_server:main',
+            'object_detection_action_client = yolov8_ros2.object_detection_action_client:main',
         ],
     },
 )
