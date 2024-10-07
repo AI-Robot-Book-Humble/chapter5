@@ -135,7 +135,7 @@ class ObjectDetectionSRV2(Node):
                 for box in boxes:
                     b = box.xyxy[0].to('cpu').detach().numpy().copy()
                     c = box.cls
-                    r.name = self.detection_model.names[int(c)]
+                    r.names = self.detection_model.names[int(c)]
                     r.u1 = int(b[0])
                     r.v1 = int(b[1])
                     r.u2 = int(b[2])
@@ -146,7 +146,7 @@ class ObjectDetectionSRV2(Node):
         # 物体に認識の結果に指定された名前があるか調べる．
         target = None
         for r in detection_result:
-            if r.name == target_name:
+            if r.names == target_name:
                 target = r
                 break
 
@@ -169,7 +169,7 @@ class ObjectDetectionSRV2(Node):
                 x = z / fx * (u - cx)
                 y = z / fy * (v - cy)
                 self.get_logger().info(
-                    f'{target.name} ({x:.3f}, {y:.3f}, {z:.3f})')
+                    f'{target.names} ({x:.3f}, {y:.3f}, {z:.3f})')
                 # tfの創出
                 ts = TransformStamped()
                 ts.header = msg_depth.header

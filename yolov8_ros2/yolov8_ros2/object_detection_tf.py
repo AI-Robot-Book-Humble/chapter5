@@ -57,7 +57,7 @@ class ObjectDetectionTF(Node):
             for box in boxes:
                 b = box.xyxy[0].to('cpu').detach().numpy().copy()
                 c = box.cls
-                r.name = self.detection_model.names[int(c)]
+                r.names = self.detection_model.names[int(c)]
                 r.u1 = int(b[0])
                 r.v1 = int(b[1])
                 r.u2 = int(b[2])
@@ -67,7 +67,7 @@ class ObjectDetectionTF(Node):
 
         target = None
         for r in detection_result:
-            if r.name == self.target_name:
+            if r.names == self.target_name:
                 target = r
                 break
 
@@ -88,7 +88,7 @@ class ObjectDetectionTF(Node):
                 x = z / fx * (u - cx)
                 y = z / fy * (v - cy)
                 self.get_logger().info(
-                    f'{target.name} ({x:.3f}, {y:.3f}, {z:.3f})')
+                    f'{target.names} ({x:.3f}, {y:.3f}, {z:.3f})')
                 ts = TransformStamped()
                 ts.header = msg_depth.header
                 ts.child_frame_id = self.frame_id
