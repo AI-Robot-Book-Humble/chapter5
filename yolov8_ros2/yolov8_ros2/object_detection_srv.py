@@ -22,14 +22,13 @@ from airobot_interfaces.srv import StringCommand
 
 class ObjectDetectionService(Node):
 
-    def __init__(self, **args):
+    def __init__(self):
         super().__init__('object_detection_service')
 
         self.running = False  # 物体認識の処理のフラグ
         self.target_name = 'cup'  # 探す物体名
-        self.counter = 0  # 物体の検出回数を数えるカウンタ
         self.frame_id = 'target'  # ブロードキャストするtfの名前
-        self.bridge = CvBridge()  # ROSのメッセージとOpenCVのデータ変換
+        self.counter = 0  # 物体の検出回数を数えるカウンタ
         self.q_color = queue.Queue()  # メインスレッドへカラー画像を送るキュー
         self.q_depth = queue.Queue()  # メインスレッドへ深度画像を送るキュー
         self.lock = threading.Lock()  # 2つのコールバックメソッド間の排他制御用
@@ -86,7 +85,7 @@ class ObjectDetectionService(Node):
                     self.running = False
                     counter = self.counter
                     print(counter)
-                if counter >= 1:  # 十分な回数で認識されているか？
+                if counter >= 2:  # 十分な回数で認識されているか？
                     response.answer = 'OK'
                 else:
                     response.answer = 'NG not found'
@@ -140,43 +139,41 @@ class ObjectDetectionService(Node):
             running = self.running
 
         # 物体認識
-        detection_result = []
+        boxes = []
+        classes = []
         if running:
-            detection_result = self.detection_model(img_color)
-            img_color = detection_result[0].plot()
-
-            for r in detection_result:
-                boxes = r.boxes
-                for box in boxes:
-                    b = box.xyxy[0].to('cpu').detach().numpy().copy()
-                    c = box.cls
-                    r.names = self.detection_model.names[int(c)]
-                    r.u1 = int(b[0])
-                    r.v1 = int(b[1])
-                    r.u2 = int(b[2])
-                    r.v2 = int(b[3])
+            results = self.detection_model(img_color, verbose=False)
+            names = results[0].names
+            boxes = results[0].boxes
+            classes = results[0].boxes.cls
+            img_color = results[0].plot()
+            with self.lock:
+                self.counter += 1
 
         self.q_color.put(img_color)  # メインスレッドへカラー画像を送る．
 
         # 物体に認識の結果に指定された名前があるか調べる．
-        target = None
-        for r in detection_result:
-            if r.names == target_name:
-                target = r
+        box = None
+        for b, c in zip(boxes, classes):
+            if names[int(c)] == target_name:
+                box = b
                 break
 
         # カラー画像内で検出された場合は，深度画像から3次元位置を算出．
         depth = 0
-        if target is not None:
-            u1 = round(target.u1)
-            u2 = round(target.u2)
-            v1 = round(target.v1)
-            v2 = round(target.v2)
-            u = round((target.u1 + target.u2) / 2)
-            v = round((target.v1 + target.v2) / 2)
+        (bu1, bu2, bv1, bv2) = (0, 0, 0, 0)
+        if box is not None:
+            a = 0.5
+            bu1, bv1, bu2, bv2 = [int(i) for i in box.xyxy.cpu().numpy()[0]]
+            u1 = round((bu1 + bu2) / 2 - (bu2 - bu1) * a / 2)
+            u2 = round((bu1 + bu2) / 2 + (bu2 - bu1) * a / 2)
+            v1 = round((bv1 + bv2) / 2 - (bv2 - bv1) * a / 2)
+            v2 = round((bv1 + bv2) / 2 + (bv2 - bv1) * a / 2)
+            u = round((bu1 + bu2) / 2)
+            v = round((bv1 + bv2) / 2)
             depth = np.median(img_depth[v1:v2+1, u1:u2+1])
             if depth != 0:
-                z = depth * 1e-3
+                z = float(depth) * depth_scale
                 fx = msg_info.k[0]
                 fy = msg_info.k[4]
                 cx = msg_info.k[2]
@@ -184,8 +181,8 @@ class ObjectDetectionService(Node):
                 x = z / fx * (u - cx)
                 y = z / fy * (v - cy)
                 self.get_logger().info(
-                    f'{target.names} ({x:.3f}, {y:.3f}, {z:.3f})')
-                # tfの創出
+                    f'{target_name} ({x:.3f}, {y:.3f}, {z:.3f})')
+                # tfの送出
                 ts = TransformStamped()
                 ts.header = msg_depth.header
                 ts.child_frame_id = self.frame_id
@@ -193,15 +190,16 @@ class ObjectDetectionService(Node):
                 ts.transform.translation.y = y
                 ts.transform.translation.z = z
                 self.broadcaster.sendTransform(ts)
-                # サービスコールバックメソッドとの共有
+
                 with self.lock:
                     self.counter += 1
 
         # 深度画像の加工
-        img_depth *= 16
+        if img_depth_conversion:
+            img_depth *= 16
         if depth != 0:  # 認識していて，かつ，距離が得られた場合
-            pt1 = (int(target.u1), int(target.v1))
-            pt2 = (int(target.u2), int(target.v2))
+            pt1 = (int(bu1), int(bv1))
+            pt2 = (int(bu2), int(bv2))
             cv2.rectangle(img_depth, pt1=pt1, pt2=pt2, color=0xffff)
         self.q_depth.put(img_depth)  # メインスレッドへ深度画像を送る．
 
