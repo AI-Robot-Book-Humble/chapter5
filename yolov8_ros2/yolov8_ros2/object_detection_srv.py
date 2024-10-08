@@ -1,38 +1,34 @@
-import sys
-import time
-import threading
-import queue
-import cv2
-import numpy as np
-
 import rclpy
 from rclpy.node import Node
-from sensor_msgs.msg import Image, CameraInfo
-from geometry_msgs.msg import TransformStamped
-from cv_bridge import CvBridge, CvBridgeError
-from rclpy.utilities import remove_ros_args
-from message_filters import Subscriber, ApproximateTimeSynchronizer
-from tf2_ros import TransformBroadcaster
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
+from sensor_msgs.msg import Image, CameraInfo
+from geometry_msgs.msg import TransformStamped
+from message_filters import Subscriber, ApproximateTimeSynchronizer
+from tf2_ros import TransformBroadcaster
+
+import cv2
+from cv_bridge import CvBridge, CvBridgeError
+import numpy as np
 
 from ultralytics import YOLO
 
-#from yolov5_ros2.detector import Detector, parse_opt
+import threading
+import queue
+import time
+
 from airobot_interfaces.srv import StringCommand
 
 
-class ObjectDetectionSRV2(Node):
+class ObjectDetectionService(Node):
 
     def __init__(self, **args):
-        super().__init__('object_detection_srv2')
+        super().__init__('object_detection_service')
 
         self.running = False  # 物体認識の処理のフラグ
         self.target_name = 'cup'  # 探す物体名
         self.counter = 0  # 物体の検出回数を数えるカウンタ
         self.frame_id = 'target'  # ブロードキャストするtfの名前
-        #self.detector = Detector(**args)  # yolov5を使って物体検出を行うクラス
-        self.detection_model = YOLO("yolov8m.pt")
         self.bridge = CvBridge()  # ROSのメッセージとOpenCVのデータ変換
         self.q_color = queue.Queue()  # メインスレッドへカラー画像を送るキュー
         self.q_depth = queue.Queue()  # メインスレッドへ深度画像を送るキュー
@@ -58,8 +54,18 @@ class ObjectDetectionSRV2(Node):
 
         # 他のノードからの司令を受け付けるサービスサーバ
         self.service = self.create_service(
-            StringCommand, 'vision/command', self.command_callback,
-            callback_group=self.callback_group)
+            StringCommand,
+            'vision/command',
+            self.command_callback,
+            callback_group=self.callback_group
+            )
+        
+        self.detection_model = YOLO('yolov8m.pt')
+        # ダミーの画像推論を行うことでYOLOのキャッシュをロードする
+        dummy_image = np.zeros((640, 480, 3), dtype=np.uint8)
+        results = self.detection_model(dummy_image, verbose=False)
+        self.names = results[0].names.values()
+        threading.excepthook = lambda x: ()
 
     # StringCommandのリクエストが届いたときに呼び出されるメソッド
     def command_callback(self, request, response):
@@ -68,14 +74,14 @@ class ObjectDetectionSRV2(Node):
             name = request.command[4:].strip()
             if len(name) == 0:
                 response.answer = 'NG name required'
-            #elif name not in self.detection_model.names:
-            #    response.answer = 'NG unknown name'
+            elif name not in self.names:
+                response.answer = 'NG unknown name'
             else:
                 with self.lock:  # 物体認識を開始させる
                     self.target_name = name
                     self.running = True
                     self.counter = 0
-                time.sleep(10)   # しばらく停止
+                time.sleep(3)   # しばらく停止
                 with self.lock:  # 物体認識の結果を得る
                     self.running = False
                     counter = self.counter
@@ -88,8 +94,8 @@ class ObjectDetectionSRV2(Node):
             name = request.command[5:].strip()
             if len(name) == 0:
                 response.answer = 'NG name required'
-            #elif name not in self.detection_model.names:
-            #    response.answer = 'NG unknown name'
+            elif name not in self.names:
+                response.answer = 'NG unknown name'
             else:
                 with self.lock:  # 物体認識を開始させる
                     self.target_name = name
@@ -117,6 +123,16 @@ class ObjectDetectionSRV2(Node):
         if img_color.shape[0:2] != img_depth.shape[0:2]:
             self.get_logger().warn('カラーと深度の画像サイズが異なる')
             return
+        
+        if img_depth.dtype == np.uint16:
+            depth_scale = 1e-3
+            img_depth_conversion = True
+        elif img_depth.dtype == np.float32:
+            depth_scale = 1
+            img_depth_conversion = False
+        else:
+            self.get_logger().warn('深度画像の型に対応していない')
+            return
 
         # サービスコールバックメソッドとの共有
         with self.lock:
@@ -126,7 +142,6 @@ class ObjectDetectionSRV2(Node):
         # 物体認識
         detection_result = []
         if running:
-            #img_color, result = self.detector.detect(img_color)
             detection_result = self.detection_model(img_color)
             img_color = detection_result[0].plot()
 
@@ -193,9 +208,7 @@ class ObjectDetectionSRV2(Node):
 
 def main():
     rclpy.init()
-    #opt = parse_opt(remove_ros_args(args=sys.argv))
-    #node = ObjectDetectionSRV2(**vars(opt))
-    node = ObjectDetectionSRV2()
+    node = ObjectDetectionService()
 
     # 別のスレッドでrclpy.spin()を実行する
     executor = MultiThreadedExecutor()

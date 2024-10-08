@@ -22,7 +22,6 @@ setup(
         'console_scripts': [
             'object_detection = yolov8_ros2.object_detection:main',
             'object_segmentation = yolov8_ros2.object_segmentation:main',
-            'object_distance = yolov8_ros2.object_distance:main',
             'object_detection_tf = yolov8_ros2.object_detection_tf:main',
             'object_detection_srv = yolov8_ros2.object_detection_srv:main',
             'object_detection_action_server = yolov8_ros2.object_detection_action_server:main',
