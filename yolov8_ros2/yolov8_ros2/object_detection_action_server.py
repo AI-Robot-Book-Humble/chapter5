@@ -16,8 +16,7 @@ import numpy as np
 from ultralytics import YOLO
 
 import threading
-from threading import Thread, Lock
-from queue import Queue
+import queue
 import time
 
 from airobot_interfaces.action import StringCommand
@@ -31,15 +30,15 @@ class ObjectDetectionActionServer(Node):
 
         self.running = False  # 物体認識の処理のフラグ
         self.target_name = 'cup'  # 探す物体名
+        self.frame_id = 'target'  # ブロードキャストするtfの名前
         self.counter_total = 0  # 画像の受信回数を数えるカウンタ
         self.counter_detect = 0  # 物体の検出回数を数えるカウンタ
-        self.frame_id = 'target'  # ブロードキャストするtfの名前
-        self.q_color = Queue()  # メインスレッドへカラー画像を送るキュー
-        self.q_depth = Queue()  # メインスレッドへ深度画像を送るキュー
+        self.q_color = queue.Queue()  # メインスレッドへカラー画像を送るキュー
+        self.q_depth = queue.Queue()  # メインスレッドへ深度画像を送るキュー
         self.goal_handle = None
-        self.goal_lock = Lock()
-        self.execute_lock = Lock()
-        self.target_detection_lock = Lock()
+        self.goal_lock = threading.Lock()
+        self.execute_lock = threading.Lock()
+        self.target_detection_lock = threading.Lock()
 
         # message_filtersを使って3個のトピックのサブスクライブをまとめて処理する．
         self.callback_group = ReentrantCallbackGroup()   # コールバックの並行処理のため
@@ -255,7 +254,6 @@ class ObjectDetectionActionServer(Node):
             pt1 = (int(bu1), int(bv1))
             pt2 = (int(bu2), int(bv2))
             cv2.rectangle(img_depth, pt1=pt1, pt2=pt2, color=0xffff)
-            cv2.rectangle(img_depth, pt1=(u1, v1), pt2=(u2, v2), color=0xffff)
         self.q_depth.put(img_depth)  # メインスレッドへ深度画像を送る．
 
 
@@ -263,7 +261,7 @@ def main():
     rclpy.init()
     node = ObjectDetectionActionServer()
     executor = MultiThreadedExecutor()
-    thread = Thread(target=rclpy.spin, args=(node, executor), daemon=True)
+    thread = threading.Thread(target=rclpy.spin, args=(node, executor), daemon=True)
     thread.start()
 
     try:
