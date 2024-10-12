@@ -9,22 +9,22 @@
 
 - OpenCV関連のパッケージをインストール
   ```
-  pip3 install opencv-contrib-python==4.5.5.64
+  pip3 install opencv-contrib-python
   ```
 
 - ROS2とOpenCVのインタフェースとなるパッケージをインストール
   ```
-  sudo apt install ros-foxy-vision-opencv
+  sudo apt install ros-humble-vision-opencv
   ```
 
 - USBカメラ用ノードのパッケージをインストール
   ```
-  sudo apt install ros-foxy-usb-cam
+  sudo apt install ros-humble-usb-cam
   ```
 
 - Intel RealSense RGB-Dカメラ用のROSラッパをインストール
   ```
-  sudo apt install ros-foxy-realsense2-camera
+  sudo apt install ros-humble-realsense2-camera
   ```
 
 - ROSのワークスペースを`~/airobot_ws`とする．
@@ -39,12 +39,12 @@
 
 - このパッケージを含むリポジトリを入手
   ```
-  git clone https://github.com/AI-Robot-Book/chapter5
+  git clone https://github.com/AI-Robot-Book-Humble/chapter5
   ```
 
-- サービスのインタフェースを定義しているパッケージを含むリポジトリを入手
+- アクションのインタフェースを定義しているパッケージを含むリポジトリを入手
   ```
-  git clone https://github.com/AI-Robot-Book/chapter2
+  git clone https://github.com/AI-Robot-Book-Humble/chapter2
   ```
 
 - パッケージをビルド
@@ -206,11 +206,12 @@
 
 ## 履歴
 
+- 2024-10-10: Ubuntu 22.04, ROS Humbleにの更新
 - 2022-08-27: ライセンス・ドキュメントの整備
 
 ## ライセンス
 
-Copyright (c) 2022, TAN Jeffrey Too Chuan  
+Copyright (c) 2024, TAN Jeffrey Too Chuan  
 All rights reserved.  
 This project is licensed under the Apache License 2.0 found in the LICENSE file in the root directory of this project.
 
