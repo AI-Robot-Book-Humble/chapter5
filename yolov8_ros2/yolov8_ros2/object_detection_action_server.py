@@ -91,7 +91,7 @@ class ObjectDetectionActionServer(Node):
             request: StringCommand.Goal = goal_handle.request
             result = StringCommand.Result()
             result.answer = 'NG'
-            # find
+            # 指示文find: 一定時間内に物体検出を行い
             if request.command.startswith('find'):
                 name = request.command[4:].strip()
                 if len(name) == 0:
@@ -129,7 +129,7 @@ class ObjectDetectionActionServer(Node):
                         else:
                             result.answer = 'NG not found'
                             goal_handle.succeed()
-            # track
+            # 指示文track: 継続的に物体検出を行い
             elif request.command.startswith('track'):
                 name = request.command[5:].strip()
                 if len(name) == 0:
@@ -144,13 +144,13 @@ class ObjectDetectionActionServer(Node):
                         self.running = True
                     result.answer = 'OK'
                     goal_handle.succeed()
-            # stop
+            # 指示文stop: 物体検出の処理を停止
             elif request.command.startswith('stop'):
                 with self.target_detection_lock:
                     self.running = False
                 result.answer = 'OK'
                 goal_handle.succeed()
-            # otherwise
+            # それ以外
             else:
                 result.answer = f'NG {request.command} not supported'
                 goal_handle.abort()
