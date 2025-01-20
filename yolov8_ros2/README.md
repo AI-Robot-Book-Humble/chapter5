@@ -11,11 +11,8 @@
 
 - YOLOv8ソフトウェアをインストール
   ```
-  git clone https://github.com/ultralytics/ultralytics
-  
-  cd ultralytics
-  
-  pip install -e .
+  pip3 install ultralytics
+  pip3 uninstall -y opencv_python
   ```
 
 ## 実行
