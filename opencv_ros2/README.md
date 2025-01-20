@@ -191,7 +191,7 @@
   pip3 uninstall opencv-python
   ```
 
-- aruco_node_tf.pyのサンプルプログラムを実行するの時に，画像中に座標軸が表示されません．または，tfトピックの内容を観察すると，translationは0,0,0，rotationは0,0,0,1のままです．
+- aruco_node_tfのサンプルプログラムを実行するの時に，画像中に座標軸が表示されません．または，tfトピックの内容を観察すると，translationは0,0,0，rotationは0,0,0,1のままです．
 
   対策：USBカメラのキャリブレーション結果ファイルが必要です．tfはキャリブレーション結果からのcamera infoに基づいて計算されています．
   ```
