@@ -14,6 +14,7 @@
   pip3 install ultralytics
   pip3 uninstall -y opencv-python
   ```
+  注：open-python は ultralytics とともに自動的にインストールされます．したがって，open-contrib-python との競合を避けるためにこれを削除する必要があります．
 
 ## 実行
 
