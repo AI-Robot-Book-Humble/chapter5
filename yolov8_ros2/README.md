@@ -12,7 +12,7 @@
 - YOLOv8ソフトウェアをインストール
   ```
   pip3 install ultralytics
-  pip3 uninstall -y opencv_python
+  pip3 uninstall -y opencv-python
   ```
 
 ## 実行
