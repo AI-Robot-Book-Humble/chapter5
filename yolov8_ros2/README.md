@@ -52,15 +52,15 @@
 - 端末3：ROSアクション通信を呼び出し（対象物体'cup'）
   - 対象物体を探す
     ```
-    ros2 action send_goal /vision/command airobot_interfaces/action/StringCommand "{command: 'find cup'}"
+    ros2 action send_goal /vision/command airobot_interfaces/action/StringCommand "{command: find cup}"
     ```
   - 対象物体を連続的に追跡
     ```
-    ros2 action send_goal /vision/command airobot_interfaces/action/StringCommand "{command: 'track cup'}"
+    ros2 action send_goal /vision/command airobot_interfaces/action/StringCommand "{command: track cup}"
     ```
   - 物体検出の処理を停止
     ```
-    ros2 action send_goal /vision/command airobot_interfaces/action/StringCommand "{command: 'stop'}"
+    ros2 action send_goal /vision/command airobot_interfaces/action/StringCommand "{command: stop}"
     ```
 
 ## ヘルプ
