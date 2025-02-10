@@ -209,7 +209,7 @@
 
 ## ライセンス
 
-Copyright (c) 2024, TAN Jeffrey Too Chuan  
+Copyright (c) 2022-2025, TAN Jeffrey Too Chuan  
 All rights reserved.  
 This project is licensed under the Apache License 2.0 found in the LICENSE file in the root directory of this project.
 
