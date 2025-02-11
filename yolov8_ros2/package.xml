@@ -3,9 +3,9 @@
 <package format="3">
   <name>yolov8_ros2</name>
   <version>2.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="jupiter@todo.todo">jupiter</maintainer>
-  <license>Apache-2.0</license>
+  <description>YOLOv8 applications with ROS 2</description>
+  <maintainer email="ai-robot-book@googlegroups.com">Jeffrey Too Chuan TAN</maintainer>
+  <license>Apache License 2.0</license>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
